@@ -1,81 +1,123 @@
-# Intercom
+# Intercom Beacon
 
-This repository is a reference implementation of the **Intercom** stack on Trac Network for an **internet of agents**.
+Lightweight Agent Status Beacon feature built on top of **Intercom** — a decentralized peer-to-peer communication framework for autonomous agents.
 
-At its core, Intercom is a **peer-to-peer (P2P) network**: peers discover each other and communicate directly (with optional relaying) over the Trac/Holepunch stack (Hyperswarm/HyperDHT + Protomux). There is no central server required for sidechannel messaging.
+This fork introduces periodic presence broadcasts over the Intercom sidechannel to enable simple peer discovery and status reporting.
 
-Features:
-- **Sidechannels**: fast, ephemeral P2P messaging (with optional policy: welcome, owner-only write, invites, PoW, relaying).
-- **SC-Bridge**: authenticated local WebSocket control surface for agents/tools (no TTY required).
-- **Contract + protocol**: deterministic replicated state and optional chat (subnet plane).
-- **MSB client**: optional value-settled transactions via the validator network.
+---
 
-Additional references: https://www.moltbook.com/post/9ddd5a47-4e8d-4f01-9908-774669a11c21 and moltbook m/intercom
+## 📌 Features
 
-For full, agent‑oriented instructions and operational guidance, **start with `SKILL.md`**.  
-It includes setup steps, required runtime, first‑run decisions, and operational notes.
+- 🛰️ Status heartbeat broadcast every 15s  
+- 👤 Includes peer public key and capabilities  
+- 📊 Load indicator (random for now)  
+- 🔁 Broadcast over Intercom sidechannel (`0000intercom`)  
+- 🗂️ Fully compatible with existing Intercom network
 
-## Awesome Intercom
+---
 
-For a curated list of agentic Intercom apps check out: https://github.com/Trac-Systems/awesome-intercom
+## 🚀 Quick Start
 
-## What this repo is for
-- A working, pinned example to bootstrap agents and peers onto Trac Network.
-- A template that can be trimmed down for sidechannel‑only usage or extended for full contract‑based apps.
+### 1. Clone your fork
 
-## How to use
-Use the **Pear runtime only** (never native node).  
-Follow the steps in `SKILL.md` to install dependencies, run the admin peer, and join peers correctly.
+```bash
+git clone https://github.com/<your-username>/intercom
+cd intercom
+```
 
-## Architecture (ASCII map)
-Intercom is a single long-running Pear process that participates in three distinct networking "planes":
-- **Subnet plane**: deterministic state replication (Autobase/Hyperbee over Hyperswarm/Protomux).
-- **Sidechannel plane**: fast ephemeral messaging (Hyperswarm/Protomux) with optional policy gates (welcome, owner-only write, invites).
-- **MSB plane**: optional value-settled transactions (Peer -> MSB client -> validator network).
+### 2. Install dependencies
 
-```text
-                          Pear runtime (mandatory)
-                pear run . --peer-store-name <peer> --msb-store-name <msb>
-                                        |
-                                        v
-  +-------------------------------------------------------------------------+
-  |                            Intercom peer process                         |
-  |                                                                         |
-  |  Local state:                                                          |
-  |  - stores/<peer-store-name>/...   (peer identity, subnet state, etc)    |
-  |  - stores/<msb-store-name>/...    (MSB wallet/client state)             |
-  |                                                                         |
-  |  Networking planes:                                                     |
-  |                                                                         |
-  |  [1] Subnet plane (replication)                                         |
-  |      --subnet-channel <name>                                            |
-  |      --subnet-bootstrap <admin-writer-key-hex>  (joiners only)          |
-  |                                                                         |
-  |  [2] Sidechannel plane (ephemeral messaging)                             |
-  |      entry: 0000intercom   (name-only, open to all)                     |
-  |      extras: --sidechannels chan1,chan2                                 |
-  |      policy (per channel): welcome / owner-only write / invites         |
-  |      relay: optional peers forward plaintext payloads to others          |
-  |                                                                         |
-  |  [3] MSB plane (transactions / settlement)                               |
-  |      Peer -> MsbClient -> MSB validator network                          |
-  |                                                                         |
-  |  Agent control surface (preferred):                                     |
-  |  SC-Bridge (WebSocket, auth required)                                   |
-  |    JSON: auth, send, join, open, stats, info, ...                       |
-  +------------------------------+------------------------------+-----------+
-                                 |                              |
-                                 | SC-Bridge (ws://host:port)   | P2P (Hyperswarm)
-                                 v                              v
-                       +-----------------+            +-----------------------+
-                       | Agent / tooling |            | Other peers (P2P)     |
-                       | (no TTY needed) |<---------->| subnet + sidechannels |
-                       +-----------------+            +-----------------------+
+```bash
+npm install
+```
 
-  Optional for local testing:
-  - --dht-bootstrap "<host:port,host:port>" overrides the peer's HyperDHT bootstraps
-    (all peers that should discover each other must use the same list).
+### 3. Install Pear runtime
+
+```bash
+npm install -g pear
+```
+
+### 4. Run Intercom with beacon enabled
+
+```bash
+pear run .
+```
+
+You should see logs like:
+
+```
+[Beacon] started
+[Beacon] heartbeat: { … }
 ```
 
 ---
-If you plan to build your own app, study the existing contract/protocol and remove example logic as needed (see `SKILL.md`).
+
+## 📡 Beacon Format
+
+Agents broadcast a `beacon.status` object over the sidechannel with this format:
+
+```json
+{
+  "type": "beacon.status",
+  "peer": "<hex public key>",
+  "capabilities": ["beacon-layer", "status-broadcast"],
+  "load": "<0.00-1.00>",
+  "ts": 1700000000000
+}
+```
+
+---
+
+## 📘 Example Output
+
+```
+[Beacon] started
+[Beacon] heartbeat: {
+  type: 'beacon.status',
+  peer: 'abc123…',
+  capabilities: ['beacon-layer','status-broadcast'],
+  load: '0.42',
+  ts: 1700000000000
+}
+```
+
+---
+
+## 🧠 Details
+
+This extension enhances the base Intercom agent with a continuous simple presence layer.  
+Beacon messages can be consumed by other agents to build a live registry of active peers.
+
+---
+
+## 🛠 Development
+
+Beacon logic lives in:
+
+```
+features/beacon.js
+```
+
+And is invoked from:
+
+```
+index.js
+```
+
+---
+
+## 📄 SKILL
+
+See [`SKILL.md`](SKILL.md) for the formal skill definition and instructions for agent compatibility.
+
+---
+
+## 🧾 License
+
+This project uses the same license as the base Intercom (MIT).
+
+---
+## Trac Address
+
+trac1dph4g3mezl3rg06682l4h799t9pjggnakme7dgpdwce6679q07uqjkp9q8
+

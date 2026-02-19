@@ -14,6 +14,8 @@ import SampleContract from './contract/contract.js';
 import { Timer } from './features/timer/index.js';
 import Sidechannel from './features/sidechannel/index.js';
 import ScBridge from './features/sc-bridge/index.js';
+import { startBeacon } from "./features/beacon.js";
+
 
 const { env, storeLabel, flags } = getPearRuntime();
 
@@ -531,3 +533,6 @@ sidechannel
 
 const terminal = new Terminal(peer);
 await terminal.start();
+
+startBeacon(peer);
+
