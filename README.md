@@ -21,7 +21,7 @@ This fork introduces periodic presence broadcasts over the Intercom sidechannel 
 ### 1. Clone your fork
 
 ```bash
-git clone https://github.com/<your-username>/intercom
+git clone https://github.com/jerquinae/intercom
 cd intercom
 ```
 
@@ -117,7 +117,6 @@ See [`SKILL.md`](SKILL.md) for the formal skill definition and instructions for 
 This project uses the same license as the base Intercom (MIT).
 
 ---
-## Trac Address
+##  Trac Address
 
-trac1dph4g3mezl3rg06682l4h799t9pjggnakme7dgpdwce6679q07uqjkp9q8
-
+`trac1dph4g3mezl3rg06682l4h799t9pjggnakme7dgpdwce6679q07uqjkp9q8`
